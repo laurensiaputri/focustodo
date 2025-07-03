@@ -10,10 +10,16 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 use App\Models\User;
 
+
 // ========== Redirect otomatis dari root ==========
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
-});
+    return view('landing'); // arahkan ke halaman landing
+})->name('landing');
+
+Route::get('/landing', function () {
+    return view('landing');
+})->name('landing');
+
 
 // ========== TAMU (BELUM LOGIN) ==========
 Route::middleware('guest')->group(function () {
@@ -23,9 +29,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 
     // Login Google
-    Route::get('/auth/google', function () {
-        return Socialite::driver('google')->redirect();
-    })->name('google.login');
+// Login Google
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
 
     // Callback dari Google
     Route::get('/auth/google/callback', function () {
@@ -91,3 +98,28 @@ Route::post('/tasks', [TaskController::class, 'storeFromCalendar']);
 Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
 Route::post('/tasks/{id}/updateStatus', [TaskController::class, 'updateStatus']);
 Route::get('/laporan/chart-data', [TaskController::class, 'chartData'])->name('report.chartData');
+use App\Http\Controllers\UserController;
+
+Route::middleware(['auth'])->group(function () {
+    // Profil User
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+});
+  // PROFIL
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+
+       // Pengaturan (Ganti Password)
+    Route::get('/settings', [UserController::class, 'settings'])->name('settings');
+    Route::post('/settings/password', [UserController::class, 'updatePassword'])->name('settings.password');
+
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/update-photo', [UserController::class, 'updatePhoto'])->name('profile.updatePhoto');
+    Route::post('/settings/password', [UserController::class, 'updatePassword'])->name('settings.password');
+});
+Route::post('/profile/photo', [UserController::class, 'updatePhoto'])->name('profile.updatePhoto');
+Route::get('/profile', function () {
+    return view('profile');
+})->name('profile');
